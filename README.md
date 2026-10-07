@@ -1,49 +1,49 @@
 # Painel Administrativo - Smash Burger & Co.
 
-Painel de controle administrativo para gerenciamento de pedidos recebidos, alteração de status da cozinha (Em Preparação, Saiu para Entrega, Pronto), atualização do cardápio digital, controle de horário da loja e métricas de vendas.
+Painel de controle administrativo para gerenciamento de pedidos recebidos, alteraÃ§Ã£o de status da cozinha (Em PreparaÃ§Ã£o, Saiu para Entrega, Pronto), atualizaÃ§Ã£o do cardÃ¡pio digital, controle de horÃ¡rio da loja e mÃ©tricas de vendas.
 
 ---
 
-## Repositório Relacionado
+## RepositÃ³rio Relacionado
 
 - **Interface Visual do Cliente (Pedidos)**: [visual-lanches-pedidos](https://github.com/IagoCrs/visual-lanches-pedidos)
 
 ---
 
-## Arquitetura e Padronização de Pastas
+## Arquitetura e PadronizaÃ§Ã£o de Pastas
 
-Este projeto utiliza **Next.js 16 (App Router)** com **TypeScript** e **Tailwind CSS**. A estrutura de pastas segue o padrão unificado entre os dois repositórios:
+Este projeto utiliza **Next.js 16 (App Router)** com **TypeScript** e **Tailwind CSS**. A estrutura de pastas segue o padrÃ£o unificado entre os dois repositÃ³rios:
+```text
+visual-lanches-pedidos/
+â”œâ”€â”€ src/
+â”‚   â”œâ”€â”€ app/              # Rotas e pÃ¡ginas principais (page.tsx, layout.tsx)
+â”‚   â”œâ”€â”€ components/       # Componentes visuais (Header, ProductCard, Modais, Status)
+â”‚   â”œâ”€â”€ context/          # Estados globais (CartContext.tsx)
+â”‚   â”œâ”€â”€ data/             # Dados simulados/mocks do cardÃ¡pio (menuData.ts)
+â”‚   â”œâ”€â”€ services/         # IntegraÃ§Ãµes e APIs simuladas (storeService.ts)
+â”‚   â””â”€â”€ types/            # Interfaces TypeScript compartilhadas (diner.ts)
+â”œâ”€â”€ .eslintrc.json        # Regras de qualidade e linting de cÃ³digo
+â”œâ”€â”€ .prettierrc           # PadrÃ£o de formataÃ§Ã£o automÃ¡tica de cÃ³digo
+â”œâ”€â”€ package.json          # DependÃªncias do projeto
+â””â”€â”€ README.md             # Guia de instalaÃ§Ã£o e execuÃ§Ã£o
+```
 
-` 	ext
-visual-lanches-adm/
-+-- src/
-¦   +-- app/              # Rotas e páginas administrativas (dashboard, pedidos, cardapio)
-¦   +-- components/       # Componentes do painel (OrderCard, StatusSwitch, Metrics)
-¦   +-- context/          # Estados globais de autenticação e comanda (AuthContext.tsx)
-¦   +-- data/             # Mocks de pedidos e métricas para testes
-¦   +-- services/         # APIs e WebSockets para recepção de pedidos
-¦   +-- types/            # Interfaces TypeScript compartilhadas (diner.ts)
-+-- .eslintrc.json        # Regras de qualidade e linting de código
-+-- .prettierrc           # Padrão de formatação automática de código
-+-- package.json          # Dependências do projeto
-+-- README.md             # Guia de instalação e execução
-` `n
 ---
 
 ## Como Instalar e Rodar o Projeto (Do Zero)
 
-### Pré-requisitos
+### PrÃ©-requisitos
 - **Node.js** >= 18.x
 - **npm** ou **pnpm**
 
 ### Passo a Passo
 
-1. **Clonar o repositório**:
+1. **Clonar o repositÃ³rio**:
    `ash
    git clone https://github.com/IagoCrs/visual-lanches-adm.git
    cd visual-lanches-adm
    ``n
-2. **Instalar as dependências**:
+2. **Instalar as dependÃªncias**:
    `ash
    npm install
    ``n
@@ -62,4 +62,4 @@ visual-lanches-adm/
 - **React 19**
 - **TypeScript**
 - **Tailwind CSS**
-- **Lucide React** (Ícones)
+- **Lucide React** (Ãcones)
