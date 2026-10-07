@@ -1,4 +1,4 @@
-# Painel Administrativo - Smash Burger & Co.
+# Painel Administrativo - Visual Lanches.
 
 Painel de controle administrativo para gerenciamento de pedidos recebidos, alteração de status da cozinha (Em Preparação, Saiu para Entrega, Pronto), atualização do cardápio digital, controle de horário da loja e métricas de vendas.
 
