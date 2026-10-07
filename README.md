@@ -6,13 +6,14 @@ Painel de controle administrativo para gerenciamento de pedidos recebidos, alter
 
 ## Repositório Relacionado
 
-- **Interface Visual do Cliente (Pedidos)**: [visual-lanches-pedidos](https://github.com/IagoCrs/visual-lanches-pedidos)
+- **Interface Visual do Cliente (Pedidos)**: https://github.com/IagoCrs/visual-lanches-pedidos
 
 ---
 
 ## Arquitetura e Padronização de Pastas
 
 Este projeto utiliza **Next.js 16 (App Router)** com **TypeScript** e **Tailwind CSS**. A estrutura de pastas segue o padrão unificado entre os dois repositórios:
+
 ```text
 visual-lanches-pedidos/
 ├── src/
@@ -39,20 +40,20 @@ visual-lanches-pedidos/
 ### Passo a Passo
 
 1. **Clonar o repositório**:
-   `ash
+   ```bash
    git clone https://github.com/IagoCrs/visual-lanches-adm.git
    cd visual-lanches-adm
-   ``n
+   ```
+
 2. **Instalar as dependências**:
-   `ash
+   ```bash
    npm install
-   ``n
+   ```
+
 3. **Executar o servidor de desenvolvimento**:
-   `ash
+   ```bash
    npm run dev
-   ``n
-4. **Acessar no navegador**:
-   Abra [http://localhost:3001](http://localhost:3001) no seu navegador.
+   ```
 
 ---
 
