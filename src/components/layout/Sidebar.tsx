@@ -2,9 +2,13 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Power, RotateCw } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { LogOut, Power, RotateCw } from 'lucide-react';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { Toggle } from '@/components/ui/Toggle';
 import { usePainel } from '@/context/PainelContext';
+import { api } from '@/services/api';
 import { isActive, navGroups } from './navItems';
 import type { NavItem } from './navItems';
 
@@ -34,32 +38,41 @@ function layoutFor(variant: Variant) {
     /** Aparece só no modo ícones */
     railOnly: responsive ? 'flex lg:hidden' : 'hidden',
     /** Alinhamento dos itens: centralizado no modo ícones */
-    item: responsive ? 'justify-center lg:justify-start lg:px-4' : 'justify-start px-4',
+    item: responsive ? 'justify-center lg:justify-start lg:px-3.5' : 'justify-start px-3.5',
     /** Alinhamento de logo e usuário */
     align: responsive ? 'justify-center lg:justify-start' : 'justify-start',
     /** Texto só para leitor de tela no modo ícones */
     railSrOnly: responsive ? 'sr-only lg:hidden' : 'hidden',
+    /** Linha do usuário: empilhada no modo ícones */
+    userRow: responsive
+      ? 'flex flex-col items-center gap-2 px-1 lg:flex-row lg:gap-3'
+      : 'flex items-center gap-3 px-1',
   };
 }
+
+type Css = ReturnType<typeof layoutFor>;
+
+/** Bloco de carregamento visível sobre fundo branco */
+const skeletonOnWhite = 'bg-brand-black/5! border-transparent! backdrop-blur-none!';
 
 export function Sidebar({ variant, onNavigate }: SidebarProps) {
   const css = layoutFor(variant);
 
   return (
-    <div className="flex h-full flex-col gap-6 overflow-y-auto rounded-[1.75rem] bg-brand-black px-3 py-4 text-side-text">
+    <div className="flex h-full flex-col gap-6 overflow-y-auto rounded-2xl border border-brand-black/5 bg-white px-3 py-4 shadow-sm">
       <Brand css={css} />
 
       <nav aria-label="Menu do painel" className="flex flex-col gap-5">
         {navGroups.map((group) => (
           <div key={group.title} className="flex flex-col gap-1">
             <p
-              className={`${css.fullOnly} px-4 pb-1 text-[11px] font-black tracking-[0.08em] text-side-label uppercase`}
+              className={`${css.fullOnly} px-3.5 pb-1 text-[11px] font-semibold tracking-wider text-gray-500 uppercase`}
             >
               {group.title}
             </p>
             <span
               aria-hidden="true"
-              className={`${css.railOnly} mx-auto my-1 h-px w-8 bg-side-panel-2`}
+              className={`${css.railOnly} mx-auto my-1 h-px w-8 bg-brand-black/10`}
             />
             <ul className="flex flex-col gap-1">
               {group.items.map((item) => (
@@ -80,24 +93,24 @@ export function Sidebar({ variant, onNavigate }: SidebarProps) {
   );
 }
 
-type Css = ReturnType<typeof layoutFor>;
-
 function Brand({ css }: { css: Css }) {
   return (
-    <div className={`flex items-center gap-3 px-1 ${css.align}`}>
+    <div className={`flex items-center gap-2.5 px-1 ${css.align}`}>
       <Image
-        src="/logo-visual.png"
-        alt="Lanches e Petiscos Visual"
-        width={52}
-        height={52}
+        src="/logo.png"
+        alt="Logo Visual Lanches e Petiscos"
+        width={44}
+        height={44}
         priority
-        className="size-12 shrink-0 rounded-2xl object-cover"
+        className="size-11 shrink-0 rounded-xl object-cover shadow-sm"
       />
-      <div className={`${css.fullOnly} flex-col leading-none`}>
-        <span className="font-display text-[22px] font-extrabold text-brand-yellow uppercase">
-          Visual Lanches
+      <div className={`${css.fullOnly} flex-col`}>
+        <span className="text-lg leading-none font-black tracking-tight text-brand-black">
+          VISUAL
         </span>
-        <span className="mt-1 text-xs font-bold text-side-muted">Painel do restaurante</span>
+        <span className="mt-0.5 text-[10px] font-semibold tracking-wider text-gray-500 uppercase">
+          Painel do restaurante
+        </span>
       </div>
     </div>
   );
@@ -105,13 +118,13 @@ function Brand({ css }: { css: Css }) {
 
 function NavLink({ item, css, onNavigate }: { item: NavItem; css: Css; onNavigate?: () => void }) {
   const pathname = usePathname();
-  const { counters } = usePainel();
+  const { contadores } = usePainel();
   const active = isActive(pathname, item.href);
   const Icon = item.icon;
 
   const count =
-    item.counter && counters.state === 'ready' ? counters.data[item.counter] : undefined;
-  const loadingCount = item.counter && counters.state === 'loading';
+    item.counter && contadores.state === 'ready' ? contadores.data[item.counter] : undefined;
+  const loadingCount = item.counter && contadores.state === 'loading';
 
   return (
     <Link
@@ -119,27 +132,30 @@ function NavLink({ item, css, onNavigate }: { item: NavItem; css: Css; onNavigat
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
       title={item.label}
-      className={`relative flex h-12 items-center gap-3 rounded-2xl text-[15px] transition-colors ${css.item} ${
+      className={`relative flex h-11 items-center gap-3 rounded-xl text-[15px] transition-all ${css.item} ${
         active
-          ? 'bg-brand-yellow font-black text-brand-black'
-          : 'font-bold text-side-text hover:bg-side-panel'
+          ? 'bg-brand-yellow font-semibold text-brand-black shadow-md shadow-brand-yellow/20'
+          : 'font-medium text-gray-700 hover:bg-amber-50 hover:text-brand-black'
       }`}
     >
-      <Icon aria-hidden="true" className="size-5 shrink-0" strokeWidth={2.2} />
+      <Icon
+        aria-hidden="true"
+        className={`size-5 shrink-0 ${active ? 'text-brand-black' : 'text-amber-500'}`}
+        strokeWidth={2.2}
+      />
       <span className={css.label}>{item.label}</span>
 
-      {/* Número completo (menu aberto) */}
       {loadingCount && (
-        <span
-          aria-hidden="true"
-          className={`${css.fullOnly} skeleton-dark ml-auto h-6 w-7 rounded-full`}
+        <Skeleton
+          className={`${css.fullOnly} ${skeletonOnWhite} ml-auto h-6! w-7! rounded-full!`}
         />
       )}
       {count !== undefined && count > 0 && (
         <>
+          {/* Número no menu completo */}
           <span
-            className={`${css.fullOnly} ml-auto h-6 min-w-7 items-center justify-center rounded-full px-2 text-xs font-black ${
-              active ? 'bg-brand-black text-brand-yellow' : 'bg-side-panel-2 text-brand-yellow'
+            className={`${css.fullOnly} ml-auto h-6 min-w-7 items-center justify-center rounded-full px-2 text-xs font-bold ${
+              active ? 'bg-brand-black text-white' : 'bg-amber-100 text-amber-800'
             }`}
           >
             {count}
@@ -148,7 +164,7 @@ function NavLink({ item, css, onNavigate }: { item: NavItem; css: Css; onNavigat
           {/* Bolinha com número no modo só-ícones */}
           <span
             aria-hidden="true"
-            className={`${css.railOnly} absolute top-0.5 right-1 h-5 min-w-5 items-center justify-center rounded-full border-2 border-brand-black bg-brand-yellow px-1 text-[10px] font-black text-brand-black`}
+            className={`${css.railOnly} absolute top-0 right-1 h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-brand-black px-1 text-[10px] font-bold text-white`}
           >
             {count}
           </span>
@@ -159,42 +175,46 @@ function NavLink({ item, css, onNavigate }: { item: NavItem; css: Css; onNavigat
 }
 
 function StoreStatusCard({ css }: { css: Css }) {
-  const { store, savingStore, storeSaveError, toggleStore, reload } = usePainel();
+  const { loja, salvandoLoja, erroAoSalvarLoja, alternarLoja, recarregar } = usePainel();
 
-  if (store.state === 'loading') {
+  if (loja.state === 'loading') {
     return (
       <div aria-busy="true" aria-label="Carregando status da loja">
-        <div className={`${css.fullOnly} flex-col gap-3 rounded-[1.25rem] bg-side-panel p-4`}>
+        <div
+          className={`${css.fullOnly} flex-col gap-3 rounded-xl border border-brand-black/5 bg-neutral-50 p-3`}
+        >
           <div className="flex items-center gap-3">
-            <span className="skeleton-dark h-4 w-28" />
-            <span className="skeleton-dark ml-auto h-7 w-12 rounded-full" />
+            <Skeleton className={`${skeletonOnWhite} h-6! w-28! rounded-full!`} />
+            <Skeleton className={`${skeletonOnWhite} ml-auto h-7! w-12! rounded-full!`} />
           </div>
-          <span className="skeleton-dark h-3 w-40" />
+          <Skeleton className={`${skeletonOnWhite} h-3! w-40!`} />
         </div>
-        <span className={`${css.railOnly} skeleton-dark mx-auto size-12 rounded-2xl`} />
+        <Skeleton className={`${css.railOnly} ${skeletonOnWhite} mx-auto size-11! rounded-xl!`} />
       </div>
     );
   }
 
-  if (store.state === 'error') {
+  if (loja.state === 'error') {
     return (
       <div>
-        <div className={`${css.fullOnly} flex-col gap-2 rounded-[1.25rem] bg-side-panel p-4`}>
-          <p className="text-sm font-bold text-side-text">{store.error}</p>
+        <div
+          className={`${css.fullOnly} flex-col gap-2 rounded-xl border border-red-200 bg-red-50/50 p-3`}
+        >
+          <p className="text-sm font-medium text-red-600">{loja.error}</p>
           <button
             type="button"
-            onClick={reload}
-            className="h-11 rounded-xl border border-side-panel-2 px-3 text-sm font-black text-brand-yellow hover:bg-side-panel-2"
+            onClick={recarregar}
+            className="min-h-[44px] rounded-xl border-2 border-brand-black px-3 text-sm font-semibold text-brand-black transition-all hover:bg-brand-black/5 active:scale-95"
           >
             Tentar de novo
           </button>
         </div>
         <button
           type="button"
-          onClick={reload}
-          aria-label={`${store.error} Tentar de novo`}
+          onClick={recarregar}
+          aria-label={`${loja.error} Tentar de novo`}
           title="Status da loja não carregou. Tentar de novo"
-          className={`${css.railOnly} mx-auto size-12 items-center justify-center rounded-2xl bg-side-panel text-brand-yellow`}
+          className={`${css.railOnly} mx-auto size-11 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-600`}
         >
           <RotateCw aria-hidden="true" className="size-5" strokeWidth={2.4} />
         </button>
@@ -202,34 +222,45 @@ function StoreStatusCard({ css }: { css: Css }) {
     );
   }
 
-  const { isOpen, closesAt } = store.data;
-  const title = isOpen ? 'Loja aberta' : 'Loja pausada';
-  const detail = isOpen
-    ? `Recebendo pedidos no site e no iFood · fecha às ${closesAt}`
-    : 'Site e iFood não aceitam novos pedidos';
-  const action = isOpen ? 'Pausar recebimento de pedidos' : 'Voltar a receber pedidos';
+  const { aberta } = loja.data;
+  const acao = aberta ? 'Pausar recebimento de pedidos' : 'Voltar a receber pedidos';
 
   return (
     <div>
       {/* Cartão completo */}
-      <div className={`${css.fullOnly} flex-col gap-2 rounded-[1.25rem] bg-side-panel p-4`}>
-        <div className="flex items-center gap-3">
-          <span
-            aria-hidden="true"
-            className={`size-2.5 shrink-0 rounded-full ${isOpen ? 'bg-ok shadow-[0_0_0_4px_rgb(31_183_108/0.25)]' : 'bg-paused'}`}
-          />
-          <span className="grow text-[15px] font-black">{title}</span>
-          <StoreSwitch
-            isOpen={isOpen}
-            disabled={savingStore}
-            onToggle={toggleStore}
-            label={action}
+      <div
+        className={`${css.fullOnly} flex-col gap-1.5 rounded-xl border border-brand-black/5 bg-neutral-50 p-3`}
+      >
+        <div className="flex items-center justify-between gap-2">
+          {aberta ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-700">
+              <span
+                aria-hidden="true"
+                className="size-2 animate-pulse rounded-full bg-emerald-500"
+              />
+              Loja aberta
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-200 px-2.5 py-1 text-xs font-bold text-gray-700">
+              <span aria-hidden="true" className="size-2 rounded-full bg-gray-500" />
+              Loja pausada
+            </span>
+          )}
+          <Toggle
+            checked={aberta}
+            onChange={alternarLoja}
+            ariaLabel={acao}
+            disabled={salvandoLoja}
           />
         </div>
-        <p className="text-xs leading-snug font-semibold text-side-muted">{detail}</p>
-        <p aria-live="polite" className="text-xs font-bold">
-          {savingStore && <span className="text-side-muted">Salvando…</span>}
-          {storeSaveError && <span className="text-[#ff9b8f]">{storeSaveError}</span>}
+        <p className="text-xs leading-snug text-gray-500">
+          {aberta
+            ? 'Recebendo pedidos no site e no iFood'
+            : 'Site e iFood não aceitam novos pedidos'}
+        </p>
+        <p aria-live="polite" className="text-xs font-medium empty:hidden">
+          {salvandoLoja && <span className="text-gray-500">Salvando…</span>}
+          {erroAoSalvarLoja && <span className="text-red-600">{erroAoSalvarLoja}</span>}
         </p>
       </div>
 
@@ -237,13 +268,15 @@ function StoreStatusCard({ css }: { css: Css }) {
       <button
         type="button"
         role="switch"
-        aria-checked={isOpen}
-        aria-label={`${title}. ${action}`}
-        title={`${title} — ${action.toLowerCase()}`}
-        onClick={toggleStore}
-        disabled={savingStore}
-        className={`${css.railOnly} mx-auto size-12 items-center justify-center rounded-2xl transition-colors disabled:opacity-60 ${
-          isOpen ? 'bg-ok text-brand-black' : 'bg-side-panel-2 text-side-muted'
+        aria-checked={aberta}
+        aria-label={`${aberta ? 'Loja aberta' : 'Loja pausada'}. ${acao}`}
+        title={`${aberta ? 'Loja aberta' : 'Loja pausada'} — ${acao.toLowerCase()}`}
+        onClick={alternarLoja}
+        disabled={salvandoLoja}
+        className={`${css.railOnly} mx-auto size-11 items-center justify-center rounded-xl border transition-colors disabled:opacity-60 ${
+          aberta
+            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700'
+            : 'border-brand-black/10 bg-gray-100 text-gray-500'
         }`}
       >
         <Power aria-hidden="true" className="size-5" strokeWidth={2.6} />
@@ -252,89 +285,74 @@ function StoreStatusCard({ css }: { css: Css }) {
   );
 }
 
-function StoreSwitch({
-  isOpen,
-  disabled,
-  onToggle,
-  label,
-}: {
-  isOpen: boolean;
-  disabled: boolean;
-  onToggle: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={isOpen}
-      aria-label={label}
-      title={label}
-      onClick={onToggle}
-      disabled={disabled}
-      className="flex h-11 w-14 shrink-0 items-center justify-end disabled:opacity-60"
-    >
-      <span
-        className={`flex h-[30px] w-[52px] items-center rounded-full p-[3px] transition-colors ${
-          isOpen ? 'bg-ok' : 'bg-[#4a453c]'
-        }`}
-      >
-        <span
-          className={`size-6 rounded-full bg-white shadow transition-transform ${
-            isOpen ? 'translate-x-[22px]' : 'translate-x-0'
-          }`}
-        />
-      </span>
-    </button>
-  );
-}
-
-const roleLabel = { admin: 'Admin', atendente: 'Atendente' } as const;
+const nomePerfil = { admin: 'Admin', atendente: 'Atendente' } as const;
 
 function UserBlock({ css }: { css: Css }) {
-  const { user } = usePainel();
+  const { usuario } = usePainel();
+  const router = useRouter();
+  const [saindo, setSaindo] = useState(false);
+
+  async function sair() {
+    setSaindo(true);
+    await api.sair();
+    router.push('/login');
+  }
 
   // Se der erro, o botão "Tentar de novo" da loja recarrega tudo, inclusive o usuário
-  if (user.state === 'error') return null;
+  if (usuario.state === 'error') return null;
 
-  if (user.state === 'loading') {
+  if (usuario.state === 'loading') {
     return (
       <div className={`flex items-center gap-3 px-1 ${css.align}`} aria-hidden="true">
-        <span className="skeleton-dark size-10 shrink-0 rounded-[0.875rem]" />
+        <Skeleton className={`${skeletonOnWhite} size-10! shrink-0 rounded-full!`} />
         <span className={`${css.fullOnly} flex-col gap-1.5`}>
-          <span className="skeleton-dark h-3.5 w-20" />
-          <span className="skeleton-dark h-3 w-14" />
+          <Skeleton className={`${skeletonOnWhite} h-3.5! w-20!`} />
+          <Skeleton className={`${skeletonOnWhite} h-3! w-14!`} />
         </span>
       </div>
     );
   }
 
-  const { name, role } = user.data;
-  const initials = name
+  const { nome, perfil } = usuario.data;
+  const iniciais = nome
     .split(' ')
-    .map((part) => part[0])
+    .map((parte) => parte[0])
     .slice(0, 2)
     .join('')
     .toUpperCase();
 
-  return (
-    <div
-      className={`flex items-center gap-3 px-1 ${css.align}`}
-      title={`${name} · ${roleLabel[role]}`}
+  const botaoSair = (
+    <button
+      type="button"
+      onClick={sair}
+      disabled={saindo}
+      aria-label="Sair do painel"
+      title="Sair do painel"
+      className="flex size-10 shrink-0 items-center justify-center rounded-xl text-gray-500 transition-colors hover:bg-neutral-100 hover:text-brand-black disabled:opacity-50"
     >
-      <span
-        aria-hidden="true"
-        className="flex size-10 shrink-0 items-center justify-center rounded-[0.875rem] bg-side-panel-2 font-black text-brand-yellow"
-      >
-        {initials}
-      </span>
-      <span className={`${css.fullOnly} min-w-0 flex-col`}>
-        <span className="truncate text-sm font-black">{name}</span>
-        <span className="text-xs font-bold text-side-muted">{roleLabel[role]}</span>
-      </span>
-      <span className={css.railSrOnly}>
-        {name}, {roleLabel[role]}
-      </span>
+      <LogOut aria-hidden="true" className="size-[18px]" strokeWidth={2.2} />
+    </button>
+  );
+
+  return (
+    <div className={css.userRow}>
+      <div className={`flex min-w-0 grow items-center gap-3 ${css.align}`}>
+        <span
+          aria-hidden="true"
+          title={`${nome} · ${nomePerfil[perfil]}`}
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-yellow/20 text-sm font-bold text-amber-800"
+        >
+          {iniciais}
+        </span>
+        <span className={`${css.fullOnly} min-w-0 flex-col`}>
+          <span className="truncate text-sm font-semibold">{nome}</span>
+          <span className="text-xs text-gray-500">{nomePerfil[perfil]}</span>
+        </span>
+        <span className={css.railSrOnly}>
+          {nome}, {nomePerfil[perfil]}
+        </span>
+      </div>
+      {botaoSair}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 // src/data/mockData.ts
 import { Categoria, Produto, LojaStatus } from '@/types/cardapio';
 import { Pedido, DashboardMetrics } from '@/types/pedido';
+import { UsuarioPainel } from '@/types/painel';
 
 // 1. Categorias
 export const mockCategorias: Categoria[] = [
@@ -412,4 +413,11 @@ export const mockDashboard: DashboardMetrics = {
         faturamentoCentavos: 3348000, // R$ 33.480,00
         ticketMedioCentavos: 5400,    // R$ 54,00
     },
+};
+
+// 8. Usuário do painel (antes de entrar pela tela de login)
+export const mockUsuarioPainel: UsuarioPainel = {
+    nome: 'Gabriel',
+    email: 'gabriel@visuallanches.com.br',
+    perfil: 'admin',
 };
