@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Menu, X } from 'lucide-react';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { usePainel } from '@/context/PainelContext';
 import { Sidebar } from './Sidebar';
 
@@ -70,7 +71,7 @@ export function PainelShell({ children }: { children: ReactNode }) {
           aria-hidden="true"
           tabIndex={-1}
           onClick={closeMenu}
-          className={`fixed inset-0 z-40 bg-brand-black/50 transition-opacity ${
+          className={`fixed inset-0 z-40 bg-brand-black/40 backdrop-blur-sm transition-opacity ${
             menuOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
           }`}
         />
@@ -89,15 +90,17 @@ export function PainelShell({ children }: { children: ReactNode }) {
             type="button"
             onClick={closeMenu}
             aria-label="Fechar menu"
-            className="absolute top-5 right-5 z-10 flex size-11 items-center justify-center rounded-2xl bg-side-panel text-white"
+            className="absolute top-5 right-5 z-10 flex size-11 items-center justify-center rounded-2xl border border-brand-black/5 bg-white text-brand-black shadow-sm transition-shadow hover:shadow-md"
           >
             <X aria-hidden="true" className="size-5" strokeWidth={2.6} />
           </button>
-          <Sidebar variant="full" onNavigate={() => setMenuOpen(false)} />
+          <div className="h-full shadow-xl rounded-2xl">
+            <Sidebar variant="full" onNavigate={() => setMenuOpen(false)} />
+          </div>
         </div>
       </div>
 
-      <main id="conteudo" className="min-w-0 flex-1 px-4 py-5 md:px-6 md:py-6 lg:px-8">
+      <main id="conteudo" className="min-w-0 flex-1 px-4 py-5 sm:px-6 md:py-6 lg:px-8">
         {children}
       </main>
     </div>
@@ -113,59 +116,64 @@ function MobileTopBar({
   expanded: boolean;
   onOpen: () => void;
 }) {
-  const { store, counters } = usePainel();
-  const newOrders = counters.state === 'ready' ? counters.data.newOrders : 0;
+  const { loja, contadores } = usePainel();
+  const novos = contadores.state === 'ready' ? contadores.data.pedidosNovos : 0;
 
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-3 bg-brand-black px-3 py-2.5 text-white md:hidden">
+    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-black/5 bg-white/80 px-4 py-3 backdrop-blur-md md:hidden">
       <button
         ref={buttonRef}
         type="button"
         onClick={onOpen}
-        aria-label={newOrders > 0 ? `Abrir menu, ${newOrders} pedidos novos` : 'Abrir menu'}
+        aria-label={novos > 0 ? `Abrir menu, ${novos} pedidos novos` : 'Abrir menu'}
         aria-expanded={expanded}
         aria-controls="menu-celular"
-        className="relative flex size-11 items-center justify-center rounded-2xl bg-side-panel"
+        className="relative flex size-11 items-center justify-center rounded-2xl border border-brand-black/5 bg-white text-amber-600 shadow-sm transition-shadow hover:shadow-md"
       >
-        <Menu aria-hidden="true" className="size-5" strokeWidth={2.6} />
-        {newOrders > 0 && (
+        <Menu aria-hidden="true" className="size-5" strokeWidth={2.4} />
+        {novos > 0 && (
           <span
             aria-hidden="true"
-            className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-brand-black bg-brand-yellow px-1 text-[10px] font-black text-brand-black"
+            className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-brand-black px-1 text-[10px] font-bold text-white"
           >
-            {newOrders}
+            {novos}
           </span>
         )}
       </button>
 
       <Image
-        src="/logo-visual.png"
+        src="/logo.png"
         alt=""
-        width={36}
-        height={36}
-        className="size-9 rounded-xl object-cover"
+        width={40}
+        height={40}
+        className="size-10 rounded-xl object-cover shadow-sm"
       />
-      <span className="font-display text-xl font-extrabold text-brand-yellow uppercase">
-        Visual Lanches
+      <span className="flex flex-col">
+        <span className="text-base leading-none font-black tracking-tight">VISUAL</span>
+        <span className="text-[10px] font-semibold tracking-wider text-gray-500 uppercase">
+          Painel
+        </span>
       </span>
 
       <span className="ml-auto">
-        {store.state === 'loading' && (
-          <span className="skeleton-dark block h-7 w-20 rounded-full" />
+        {loja.state === 'loading' && (
+          <Skeleton className="h-7! w-20! rounded-full! border-transparent! bg-brand-black/5! backdrop-blur-none!" />
         )}
-        {store.state === 'ready' && (
-          <span
-            className={`flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs font-black ${
-              store.data.isOpen ? 'bg-ok-soft text-ok-dark' : 'bg-side-panel-2 text-side-text'
-            }`}
-          >
-            <span
-              aria-hidden="true"
-              className={`size-2 rounded-full ${store.data.isOpen ? 'bg-ok' : 'bg-paused'}`}
-            />
-            {store.data.isOpen ? 'Aberta' : 'Pausada'}
-          </span>
-        )}
+        {loja.state === 'ready' &&
+          (loja.data.aberta ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-700">
+              <span
+                aria-hidden="true"
+                className="size-2 animate-pulse rounded-full bg-emerald-500"
+              />
+              Aberta
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-200 px-2.5 py-1 text-xs font-bold text-gray-700">
+              <span aria-hidden="true" className="size-2 rounded-full bg-gray-500" />
+              Pausada
+            </span>
+          ))}
       </span>
     </header>
   );

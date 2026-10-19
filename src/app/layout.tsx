@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import '@fontsource-variable/nunito';
-import '@fontsource/barlow-condensed/700.css';
-import '@fontsource/barlow-condensed/800.css';
+import '@fontsource-variable/fredoka';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -14,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0b0b0a',
+  themeColor: '#ffb800',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

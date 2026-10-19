@@ -13,10 +13,8 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-wrap items-end gap-4">
       <div className="flex min-w-0 flex-col gap-1">
-        <h1 className="font-display text-4xl leading-none font-extrabold uppercase md:text-[42px]">
-          {title}
-        </h1>
-        {description && <p className="text-sm font-bold text-ink-muted">{description}</p>}
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{title}</h1>
+        {description && <p className="text-sm text-gray-500">{description}</p>}
       </div>
       {actions && <div className="ml-auto flex flex-wrap gap-2">{actions}</div>}
     </div>
