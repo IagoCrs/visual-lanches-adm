@@ -21,6 +21,8 @@ type PainelContextValue = {
   erroAoSalvarLoja: string | null;
   alternarLoja: () => void;
   recarregar: () => void;
+  /** Busca de novo só os números do menu, sem mostrar carregamento */
+  atualizarContadores: () => void;
 };
 
 const PainelContext = createContext<PainelContextValue | null>(null);
@@ -62,6 +64,12 @@ export function PainelProvider({ children }: { children: ReactNode }) {
     void carregar();
   }, [carregar]);
 
+  const atualizarContadores = useCallback(() => {
+    void api.buscarContadoresMenu().then((res) => {
+      if (res.success && res.data) setContadores({ state: 'ready', data: res.data });
+    });
+  }, []);
+
   const alternarLoja = useCallback(() => {
     if (loja.state !== 'ready' || salvandoLoja) return;
     const anterior = loja.data;
@@ -92,8 +100,18 @@ export function PainelProvider({ children }: { children: ReactNode }) {
       erroAoSalvarLoja,
       alternarLoja,
       recarregar,
+      atualizarContadores,
     }),
-    [loja, contadores, usuario, salvandoLoja, erroAoSalvarLoja, alternarLoja, recarregar]
+    [
+      loja,
+      contadores,
+      usuario,
+      salvandoLoja,
+      erroAoSalvarLoja,
+      alternarLoja,
+      recarregar,
+      atualizarContadores,
+    ]
   );
 
   return <PainelContext.Provider value={value}>{children}</PainelContext.Provider>;
