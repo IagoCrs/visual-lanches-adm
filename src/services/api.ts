@@ -13,6 +13,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ENV } from '@/config/env';
 import {
+  MOMENTO_DO_MOCK,
   mockAgendados,
   mockCategorias,
   mockDashboard,
@@ -25,7 +26,7 @@ import { getSupabase } from '@/services/supabase';
 import type { Categoria, LojaStatus, Produto } from '@/types/cardapio';
 import type { ApiResponse } from '@/types/cliente';
 import type { ContadoresMenu, CredenciaisLogin, UsuarioPainel } from '@/types/painel';
-import type { DashboardMetrics, Pedido, StatusPedido } from '@/types/pedido';
+import type { DashboardMetrics, MotivoRecusa, Pedido, StatusPedido } from '@/types/pedido';
 
 const MOCK_DELAY_MS = 1000;
 const FUSO_LOJA = 'America/Sao_Paulo';
@@ -105,6 +106,21 @@ function agendadosAPartirDeHoje(pedidos: Pedido[]): Pedido[] {
   }));
 }
 
+/**
+ * Os pedidos do painel no mock têm horários fixos em volta de MOMENTO_DO_MOCK.
+ * Aqui tudo é movido para que esse momento seja "agora": um pedido criado
+ * 5 min antes de MOMENTO_DO_MOCK aparece como "há 5 min".
+ */
+function pedidosParaAgora(pedidos: Pedido[]): Pedido[] {
+  const diferenca = Date.now() - Date.parse(MOMENTO_DO_MOCK);
+  const mover = (iso?: string) => (iso ? new Date(Date.parse(iso) + diferenca).toISOString() : iso);
+  return pedidos.map((p) => ({
+    ...p,
+    criadoEm: mover(p.criadoEm) ?? p.criadoEm,
+    statusAtualizadoEm: mover(p.statusAtualizadoEm),
+  }));
+}
+
 /** No mock, o usuário que entrou fica salvo na aba do navegador. */
 const CHAVE_USUARIO = 'visual-adm:usuario-mock';
 
@@ -129,7 +145,7 @@ function salvarUsuario(usuario: UsuarioPainel | null) {
 const memoria = {
   categorias: structuredClone(mockCategorias),
   produtos: structuredClone(mockProdutos),
-  pedidos: structuredClone(mockPedidosPainel),
+  pedidos: pedidosParaAgora(structuredClone(mockPedidosPainel)),
   agendados: agendadosAPartirDeHoje(structuredClone(mockAgendados)),
   loja: structuredClone(mockLojaStatus),
   usuario: null as UsuarioPainel | null,
@@ -294,6 +310,23 @@ export const api = {
       mock: () => {
         const pedido = encontrarPedido(id);
         pedido.status = novoStatus;
+        pedido.statusAtualizadoEm = new Date().toISOString();
+        return pedido;
+      },
+    });
+  },
+
+  /** Recusa um pedido novo. O motivo é obrigatório. */
+  recusarPedido(id: string, motivo: MotivoRecusa, detalhe?: string): Promise<ApiResponse<Pedido>> {
+    return resolver('recusar o pedido', {
+      mock: () => {
+        if (!motivo) throw new Error('Escolha o motivo da recusa.');
+        const pedido = encontrarPedido(id);
+        if (pedido.status !== 'pendente') throw new Error('Só dá para recusar pedidos novos.');
+        pedido.status = 'cancelado';
+        pedido.motivoRecusa = motivo;
+        pedido.motivoRecusaDetalhe = detalhe?.trim() || undefined;
+        pedido.statusAtualizadoEm = new Date().toISOString();
         return pedido;
       },
     });

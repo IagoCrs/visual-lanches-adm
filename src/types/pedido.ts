@@ -2,6 +2,10 @@ export type StatusPedido = 'pendente' | 'em_preparo' | 'pronto' | 'saiu_para_ent
 
 export type MetodoPagamento = 'pix' | 'cartao_credito' | 'cartao_debito' | 'dinheiro';
 
+export type TipoEntrega = 'entrega' | 'retirada';
+
+export type MotivoRecusa = 'falta_ingrediente' | 'fora_da_area' | 'cozinha_lotada' | 'outro';
+
 export interface ItemPedido {
     produtoId: string;
     nome: string;
@@ -19,6 +23,7 @@ export interface Pedido {
         nome: string;
         telefone: string;
         endereco?: string;
+        bairro?: string;
     };
     itens: ItemPedido[];
     status: StatusPedido;
@@ -29,6 +34,15 @@ export interface Pedido {
     criadoEm: string;
     agendado: boolean;
     agendadoPara?: string;
+    /** Entrega no endereço ou retirada no balcão. Sem valor = entrega. */
+    tipoEntrega?: TipoEntrega;
+    /** true = já pago (Pix/cartão online ou iFood); false = receber na entrega */
+    pago?: boolean;
+    /** Quando o pedido entrou no status atual (o tempo no painel conta daqui) */
+    statusAtualizadoEm?: string;
+    /** Preenchido quando o pedido é recusado */
+    motivoRecusa?: MotivoRecusa;
+    motivoRecusaDetalhe?: string;
 }
 
 export interface DashboardMetrics {
