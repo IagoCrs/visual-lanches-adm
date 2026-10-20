@@ -2,88 +2,116 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { getCurrentUser, getMenuCounters, getStoreStatus, setStoreOpen } from '@/services/api';
-import type { ApiResult, MenuCounters, StaffUser, StoreStatus } from '@/types/painel';
+import { api } from '@/services/api';
+import type { LojaStatus } from '@/types/cardapio';
+import type { ApiResponse } from '@/types/cliente';
+import type { ContadoresMenu, UsuarioPainel } from '@/types/painel';
 
 /** Estado de qualquer dado que vem da API. */
 export type Remote<T> =
   { state: 'loading' } | { state: 'error'; error: string } | { state: 'ready'; data: T };
 
 type PainelContextValue = {
-  store: Remote<StoreStatus>;
-  counters: Remote<MenuCounters>;
-  user: Remote<StaffUser>;
+  loja: Remote<LojaStatus>;
+  contadores: Remote<ContadoresMenu>;
+  usuario: Remote<UsuarioPainel>;
   /** true enquanto a mudança de aberta/pausada está sendo salva */
-  savingStore: boolean;
+  salvandoLoja: boolean;
   /** Mensagem quando a mudança da loja não foi salva */
-  storeSaveError: string | null;
-  toggleStore: () => void;
-  reload: () => void;
+  erroAoSalvarLoja: string | null;
+  alternarLoja: () => void;
+  recarregar: () => void;
+  /** Busca de novo só os números do menu, sem mostrar carregamento */
+  atualizarContadores: () => void;
 };
 
 const PainelContext = createContext<PainelContextValue | null>(null);
 
-function toRemote<T>(result: ApiResult<T>): Remote<T> {
-  return result.ok
-    ? { state: 'ready', data: result.data }
-    : { state: 'error', error: result.error };
+function toRemote<T>(res: ApiResponse<T>): Remote<T> {
+  return res.success && res.data !== null
+    ? { state: 'ready', data: res.data }
+    : { state: 'error', error: res.error ?? 'Erro inesperado.' };
 }
 
 export function PainelProvider({ children }: { children: ReactNode }) {
-  const [store, setStore] = useState<Remote<StoreStatus>>({ state: 'loading' });
-  const [counters, setCounters] = useState<Remote<MenuCounters>>({ state: 'loading' });
-  const [user, setUser] = useState<Remote<StaffUser>>({ state: 'loading' });
-  const [savingStore, setSavingStore] = useState(false);
-  const [storeSaveError, setStoreSaveError] = useState<string | null>(null);
+  const [loja, setLoja] = useState<Remote<LojaStatus>>({ state: 'loading' });
+  const [contadores, setContadores] = useState<Remote<ContadoresMenu>>({ state: 'loading' });
+  const [usuario, setUsuario] = useState<Remote<UsuarioPainel>>({ state: 'loading' });
+  const [salvandoLoja, setSalvandoLoja] = useState(false);
+  const [erroAoSalvarLoja, setErroAoSalvarLoja] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    const [storeResult, countersResult, userResult] = await Promise.all([
-      getStoreStatus(),
-      getMenuCounters(),
-      getCurrentUser(),
+  const carregar = useCallback(async () => {
+    const [resLoja, resContadores, resUsuario] = await Promise.all([
+      api.buscarStatusLoja(),
+      api.buscarContadoresMenu(),
+      api.buscarUsuarioAtual(),
     ]);
-    setStore(toRemote(storeResult));
-    setCounters(toRemote(countersResult));
-    setUser(toRemote(userResult));
+    setLoja(toRemote(resLoja));
+    setContadores(toRemote(resContadores));
+    setUsuario(toRemote(resUsuario));
   }, []);
 
   useEffect(() => {
     // Busca inicial: os setState acontecem depois da resposta da API.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    void load();
-  }, [load]);
+    void carregar();
+  }, [carregar]);
 
-  const reload = useCallback(() => {
-    setStore({ state: 'loading' });
-    setCounters({ state: 'loading' });
-    setUser({ state: 'loading' });
-    void load();
-  }, [load]);
+  const recarregar = useCallback(() => {
+    setLoja({ state: 'loading' });
+    setContadores({ state: 'loading' });
+    setUsuario({ state: 'loading' });
+    void carregar();
+  }, [carregar]);
 
-  const toggleStore = useCallback(() => {
-    if (store.state !== 'ready' || savingStore) return;
-    const previous = store.data;
-    const next = { ...previous, isOpen: !previous.isOpen };
+  const atualizarContadores = useCallback(() => {
+    void api.buscarContadoresMenu().then((res) => {
+      if (res.success && res.data) setContadores({ state: 'ready', data: res.data });
+    });
+  }, []);
+
+  const alternarLoja = useCallback(() => {
+    if (loja.state !== 'ready' || salvandoLoja) return;
+    const anterior = loja.data;
+    const proximo = { ...anterior, aberta: !anterior.aberta };
 
     // Muda na tela na hora e confirma com a API; se falhar, volta como estava.
-    setStore({ state: 'ready', data: next });
-    setSavingStore(true);
-    setStoreSaveError(null);
+    setLoja({ state: 'ready', data: proximo });
+    setSalvandoLoja(true);
+    setErroAoSalvarLoja(null);
 
-    void setStoreOpen(next.isOpen).then((result) => {
-      setSavingStore(false);
-      if (result.ok) {
-        setStore({ state: 'ready', data: result.data });
+    void api.alterarLojaAberta(proximo.aberta).then((res) => {
+      setSalvandoLoja(false);
+      if (res.success && res.data) {
+        setLoja({ state: 'ready', data: res.data });
       } else {
-        setStore({ state: 'ready', data: previous });
-        setStoreSaveError(result.error);
+        setLoja({ state: 'ready', data: anterior });
+        setErroAoSalvarLoja(res.error);
       }
     });
-  }, [store, savingStore]);
+  }, [loja, salvandoLoja]);
 
   const value = useMemo(
-    () => ({ store, counters, user, savingStore, storeSaveError, toggleStore, reload }),
-    [store, counters, user, savingStore, storeSaveError, toggleStore, reload]
+    () => ({
+      loja,
+      contadores,
+      usuario,
+      salvandoLoja,
+      erroAoSalvarLoja,
+      alternarLoja,
+      recarregar,
+      atualizarContadores,
+    }),
+    [
+      loja,
+      contadores,
+      usuario,
+      salvandoLoja,
+      erroAoSalvarLoja,
+      alternarLoja,
+      recarregar,
+      atualizarContadores,
+    ]
   );
 
   return <PainelContext.Provider value={value}>{children}</PainelContext.Provider>;

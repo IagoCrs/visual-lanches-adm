@@ -1,6 +1,7 @@
 // src/data/mockData.ts
 import { Categoria, Produto, LojaStatus } from '@/types/cardapio';
 import { Pedido, DashboardMetrics } from '@/types/pedido';
+import { UsuarioPainel } from '@/types/painel';
 
 // 1. Categorias
 export const mockCategorias: Categoria[] = [
@@ -146,107 +147,170 @@ export const mockLojaStatus: LojaStatus = {
     mensagem: 'Aceitando pedidos agora',
 };
 
-// 5. 8 Pedidos no Painel (inclui casos especiais)
+// 5. Pedidos no Painel (inclui casos especiais)
+// Os horários são relativos a MOMENTO_DO_MOCK: a api.ts move tudo para que
+// esse momento vire "agora", assim o tempo de cada pedido faz sentido na tela.
+export const MOMENTO_DO_MOCK = '2026-10-12T22:05:00Z'; // 19:05 em Brasília
+
 export const mockPedidosPainel: Pedido[] = [
+    {
+        id: 'ped-109',
+        numeroPedido: 109,
+        origem: 'site',
+        cliente: { nome: 'Paulo Henrique', telefone: '(48) 99123-4567', endereco: 'Rua Seis de Janeiro, 410', bairro: 'Centro' },
+        itens: [
+            { produtoId: 'prod-5', nome: 'Visual Frango Crispy', quantidade: 2, precoUnitarioCentavos: 2590 },
+            { produtoId: 'prod-8', nome: 'Coca-Cola Original 350ml', quantidade: 2, precoUnitarioCentavos: 650 },
+        ],
+        status: 'pendente',
+        formaPagamento: 'dinheiro',
+        pago: false,
+        trocoParaCentavos: 10000, // Troco para R$ 100,00
+        tipoEntrega: 'entrega',
+        totalCentavos: 6980,
+        criadoEm: '2026-10-12T22:04:00Z', // há 1 min: normal
+        statusAtualizadoEm: '2026-10-12T22:04:00Z',
+        agendado: false,
+    },
     {
         id: 'ped-101',
         numeroPedido: 101,
         origem: 'site',
-        cliente: { nome: 'Lucas Ribeiro', telefone: '(11) 98765-4321', endereco: 'Rua das Flores, 120 - Apto 32' },
+        cliente: { nome: 'Lucas Ribeiro', telefone: '(48) 98765-4321', endereco: 'Rua das Flores, 120 - Apto 32', bairro: 'Próspera' },
         itens: [{ produtoId: 'prod-1', nome: 'Visual Smash Burger', quantidade: 2, precoUnitarioCentavos: 2690, adicionaisEscolhidos: ['Ponto: Bem Passado', 'Bacon Crocante Extra'] }],
         status: 'pendente',
         observacaoGeral: 'Tirar o picles e caprichar no guardanapo, por favor!', // CASO ESPECIAL: Com observação
         formaPagamento: 'pix',
+        pago: true,
+        tipoEntrega: 'entrega',
         totalCentavos: 6280,
-        criadoEm: '2026-10-12T19:00:00Z',
+        criadoEm: '2026-10-12T22:00:00Z', // há 5 min: atenção
+        statusAtualizadoEm: '2026-10-12T22:00:00Z',
         agendado: false,
     },
     {
         id: 'ped-102',
         numeroPedido: 102,
         origem: 'ifood',
-        cliente: { nome: 'Mariana Souza', telefone: '(11) 97777-8888', endereco: 'Av. Paulista, 1500' },
+        cliente: { nome: 'Mariana Souza', telefone: '(48) 97777-8888', endereco: 'Av. Centenário, 1500', bairro: 'Santa Bárbara' },
         itens: [{ produtoId: 'prod-2', nome: 'Visual Bacon Supremo', quantidade: 1, precoUnitarioCentavos: 3290 }],
-        status: 'atrasado', // CASO ESPECIAL: Pedido atrasado!
+        status: 'pendente', // CASO ESPECIAL: esperando aceite há 10 min = atrasado
         formaPagamento: 'cartao_credito',
+        pago: true,
+        tipoEntrega: 'entrega',
         totalCentavos: 3790,
-        criadoEm: '2026-10-12T18:10:00Z',
+        criadoEm: '2026-10-12T21:55:00Z',
+        statusAtualizadoEm: '2026-10-12T21:55:00Z',
         agendado: false,
     },
     {
         id: 'ped-103',
         numeroPedido: 103,
         origem: 'site',
-        cliente: { nome: 'Carlos Eduardo', telefone: '(11) 96543-2109', endereco: 'Rua Bela Cintra, 89' },
+        cliente: { nome: 'Carlos Eduardo', telefone: '(48) 96543-2109', endereco: 'Rua Coronel Pedro Benedet, 89', bairro: 'Centro' },
         itens: [
-            { produtoId: 'prod-1', nome: 'Visual Smash Burger', quantidade: 1, precoUnitarioCentavos: 2690 },
+            { produtoId: 'prod-1', nome: 'Visual Smash Burger', quantidade: 1, precoUnitarioCentavos: 2690, observacao: 'Sem cebola' },
             { produtoId: 'prod-8', nome: 'Coca-Cola Original 350ml', quantidade: 1, precoUnitarioCentavos: 650 },
         ],
         status: 'em_preparo',
         formaPagamento: 'dinheiro',
+        pago: false,
         trocoParaCentavos: 5000, // CASO ESPECIAL: Dinheiro com troco para R$ 50,00!
+        tipoEntrega: 'entrega',
         totalCentavos: 3840,
-        criadoEm: '2026-10-12T18:45:00Z',
+        criadoEm: '2026-10-12T21:45:00Z',
+        statusAtualizadoEm: '2026-10-12T21:48:00Z', // em preparo há 17 min: normal
+        agendado: false,
+    },
+    {
+        id: 'ped-110',
+        numeroPedido: 110,
+        origem: 'ifood',
+        cliente: { nome: 'Sônia Alves', telefone: '(48) 99876-5432', endereco: 'Rua Henrique Lage, 77', bairro: 'Michel' },
+        itens: [
+            { produtoId: 'prod-7', nome: 'Batata Frita Suprema', quantidade: 1, precoUnitarioCentavos: 3190 },
+            { produtoId: 'prod-2', nome: 'Visual Bacon Supremo', quantidade: 2, precoUnitarioCentavos: 3290, adicionaisEscolhidos: ['Ponto: Ao Ponto'] },
+        ],
+        status: 'em_preparo',
+        formaPagamento: 'cartao_credito',
+        pago: true,
+        tipoEntrega: 'entrega',
+        totalCentavos: 10270,
+        criadoEm: '2026-10-12T21:38:00Z',
+        statusAtualizadoEm: '2026-10-12T21:41:00Z', // em preparo há 24 min: atenção
         agendado: false,
     },
     {
         id: 'ped-104',
         numeroPedido: 104,
         origem: 'site',
-        cliente: { nome: 'Beatriz Lima', telefone: '(11) 91234-5678', endereco: 'Alameda Santos, 400' },
+        cliente: { nome: 'Beatriz Lima', telefone: '(48) 91234-5678' },
         itens: [{ produtoId: 'prod-7', nome: 'Batata Frita Suprema', quantidade: 1, precoUnitarioCentavos: 3190 }],
         status: 'pronto',
         formaPagamento: 'pix',
-        totalCentavos: 3690,
-        criadoEm: '2026-10-12T18:35:00Z',
+        pago: true,
+        tipoEntrega: 'retirada', // CASO ESPECIAL: retirada no balcão
+        totalCentavos: 3190,
+        criadoEm: '2026-10-12T21:35:00Z',
+        statusAtualizadoEm: '2026-10-12T21:58:00Z',
         agendado: false,
     },
     {
         id: 'ped-105',
         numeroPedido: 105,
         origem: 'ifood',
-        cliente: { nome: 'Rafael Mendes', telefone: '(11) 93333-2222', endereco: 'Rua Augusta, 1020' },
+        cliente: { nome: 'Rafael Mendes', telefone: '(48) 93333-2222', endereco: 'Rua Marechal Deodoro, 1020', bairro: 'Pinheirinho' },
         itens: [{ produtoId: 'prod-3', nome: 'Visual Salad Clássico', quantidade: 2, precoUnitarioCentavos: 2490 }],
         status: 'saiu_para_entrega',
         formaPagamento: 'cartao_debito',
+        pago: true,
+        tipoEntrega: 'entrega',
         totalCentavos: 5480,
-        criadoEm: '2026-10-12T18:20:00Z',
+        criadoEm: '2026-10-12T21:20:00Z',
+        statusAtualizadoEm: '2026-10-12T21:50:00Z',
         agendado: false,
     },
     {
         id: 'ped-106',
         numeroPedido: 106,
         origem: 'site',
-        cliente: { nome: 'Fernanda Rocha', telefone: '(11) 94444-1111', endereco: 'Rua Haddock Lobo, 305' },
+        cliente: { nome: 'Fernanda Rocha', telefone: '(48) 94444-1111', endereco: 'Rua Haddock Lobo, 305', bairro: 'Centro' },
         itens: [{ produtoId: 'prod-2', nome: 'Visual Bacon Supremo', quantidade: 1, precoUnitarioCentavos: 3290 }],
         status: 'entregue',
         formaPagamento: 'pix',
+        pago: true,
+        tipoEntrega: 'entrega',
         totalCentavos: 3790,
-        criadoEm: '2026-10-12T17:40:00Z',
+        criadoEm: '2026-10-12T20:40:00Z',
         agendado: false,
     },
     {
         id: 'ped-107',
         numeroPedido: 107,
         origem: 'ifood',
-        cliente: { nome: 'Thiago Neves', telefone: '(11) 95555-9999', endereco: 'Rua Oscar Freire, 55' },
+        cliente: { nome: 'Thiago Neves', telefone: '(48) 95555-9999', endereco: 'Rua Oscar Freire, 55', bairro: 'Comerciário' },
         itens: [{ produtoId: 'prod-5', nome: 'Visual Frango Crispy', quantidade: 1, precoUnitarioCentavos: 2590 }],
         status: 'entregue',
         formaPagamento: 'cartao_credito',
+        pago: true,
+        tipoEntrega: 'entrega',
         totalCentavos: 3090,
-        criadoEm: '2026-10-12T17:30:00Z',
+        criadoEm: '2026-10-12T20:30:00Z',
         agendado: false,
     },
     {
         id: 'ped-108',
         numeroPedido: 108,
         origem: 'site',
-        cliente: { nome: 'Juliana Costa', telefone: '(11) 98888-7777', endereco: 'Rua da Consolação, 200' },
+        cliente: { nome: 'Juliana Costa', telefone: '(48) 98888-7777', endereco: 'Rua da Consolação, 200', bairro: 'Centro' },
         itens: [{ produtoId: 'prod-1', nome: 'Visual Smash Burger', quantidade: 1, precoUnitarioCentavos: 2690 }],
         status: 'cancelado',
+        motivoRecusa: 'fora_da_area',
         formaPagamento: 'pix',
+        pago: true,
+        tipoEntrega: 'entrega',
         totalCentavos: 3190,
-        criadoEm: '2026-10-12T17:15:00Z',
+        criadoEm: '2026-10-12T20:15:00Z',
         agendado: false,
     },
 ];
@@ -412,4 +476,11 @@ export const mockDashboard: DashboardMetrics = {
         faturamentoCentavos: 3348000, // R$ 33.480,00
         ticketMedioCentavos: 5400,    // R$ 54,00
     },
+};
+
+// 8. Usuário do painel (antes de entrar pela tela de login)
+export const mockUsuarioPainel: UsuarioPainel = {
+    nome: 'Gabriel',
+    email: 'gabriel@visuallanches.com.br',
+    perfil: 'admin',
 };

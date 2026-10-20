@@ -1,13 +1,13 @@
 import { CalendarClock, ChartColumn, ReceiptText, Settings, UtensilsCrossed } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import type { MenuCounters } from '@/types/painel';
+import type { ContadoresMenu } from '@/types/painel';
 
 export type NavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
   /** Qual contador aparece ao lado do item */
-  counter?: keyof MenuCounters;
+  counter?: keyof ContadoresMenu;
   /** Texto lido pelo leitor de tela junto do número, ex.: "3 novos" */
   counterLabel?: string;
 };
@@ -25,14 +25,14 @@ export const navGroups: NavGroup[] = [
         href: '/pedidos',
         label: 'Pedidos',
         icon: ReceiptText,
-        counter: 'newOrders',
+        counter: 'pedidosNovos',
         counterLabel: 'novos',
       },
       {
         href: '/agendados',
         label: 'Agendados',
         icon: CalendarClock,
-        counter: 'scheduledToday',
+        counter: 'agendadosHoje',
         counterLabel: 'hoje',
       },
     ],

@@ -1,23 +1,23 @@
-/** Resposta padrão de toda função de API: os dados ou uma mensagem de erro amigável. */
-export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: string };
+/** Tipos usados só no painel do restaurante. */
 
-export type StoreStatus = {
-  /** true = recebendo pedidos no site e no iFood */
-  isOpen: boolean;
-  /** Horário de fechamento de hoje, ex.: "23:30" */
-  closesAt: string;
-};
+export type PerfilUsuario = 'admin' | 'atendente';
 
-export type MenuCounters = {
+export interface UsuarioPainel {
+  nome: string;
+  email: string;
+  perfil: PerfilUsuario;
+}
+
+export interface CredenciaisLogin {
+  email: string;
+  senha: string;
+  /** Só no modo mock: escolhe com qual perfil entrar */
+  perfil: PerfilUsuario;
+}
+
+export interface ContadoresMenu {
   /** Pedidos esperando aceite */
-  newOrders: number;
-  /** Pedidos agendados para hoje que ainda não foram para a cozinha */
-  scheduledToday: number;
-};
-
-export type StaffRole = 'admin' | 'atendente';
-
-export type StaffUser = {
-  name: string;
-  role: StaffRole;
-};
+  pedidosNovos: number;
+  /** Pedidos agendados para hoje */
+  agendadosHoje: number;
+}
